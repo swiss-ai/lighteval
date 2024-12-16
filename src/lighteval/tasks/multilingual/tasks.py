@@ -1471,6 +1471,107 @@ TASKS_TABLE.extend(
 # General Knowledge (GK) tasks evaluate a model's broad understanding across various domains.
 # These tasks typically involve answering questions on diverse subjects, testing the model's ability to recall and apply general information.
 
+# ---------------------------------- INCLUDE --------------------------------- #
+# INCLUDE is a comprehensive knowledge- and reasoning-centric benchmark across 44 languages that evaluates multilingual LLMs for performance in the actual language environments where they would be deployed. 
+# It contains 22,637 4-option multiple-choice-questions (MCQ) extracted from academic and professional exams, covering 57 topics, including regional knowledge.
+# Paper: http://arxiv.org/abs/2411.19799
+# TODO(@paultltc): Add the INCLUDE subset per language
+# INCLUDE_SUBSETS = [
+#     "Arts & Humanities",
+#     "Business & Commerce",
+#     "Social Science",
+#     "STEM",
+#     "Health oriented education",
+#     "Driving License",
+# ]
+
+include_tasks = [
+    LightevalTaskConfig(
+        # name=f"include_{language[0].value}_{formulation.name.lower()}:{subset}",
+        name=f"include_{language[0].value}_{formulation.name.lower()}",
+        prompt_function=get_mcq_prompt_function(
+            language[0],
+            lambda line: {
+                "question": line["question"],
+                "choices": line["choices"],
+                "gold_idx": line["answer"],
+            },
+            formulation=formulation,
+        ),
+        suite=("lighteval",),
+        hf_repo="CohereForAI/include-base-44",
+        hf_subset=language[1],
+        #hf_filter=partial(lambda subset, line: line["subject"] == subset, subset),
+        evaluation_splits=("test",),
+        hf_avail_splits=["test"],
+        metric=get_metrics_for_formulation(
+            formulation,
+            [
+                loglikelihood_acc_metric(normalization=LogProbTokenNorm()),
+                loglikelihood_acc_metric(normalization=LogProbCharNorm()),
+                loglikelihood_acc_metric(normalization=LogProbPMINorm()),
+            ],
+        ),
+    )
+    #for subset in INCLUDE_SUBSETS
+    for language in [
+        (Language.ALBANIAN, "Albanian"),
+        (Language.ARABIC, "Arabic"),
+        (Language.ARMENIAN, "Armenian"),
+        (Language.AZERBAIJANI, "Azerbaijani"),
+        (Language.BASQUE, "Basque"),
+        (Language.BELARUSIAN, "Belarusian"),
+        (Language.BULGARIAN, "Bulgarian"),
+        (Language.BENGALI, "Bengali"),
+        (Language.GERMAN, "German"),
+        (Language.GREEK, "Greek"),
+        (Language.SPANISH, "Spanish"),
+        (Language.ESTONIAN, "Estonian"),
+        (Language.PERSIAN, "Persian"),
+        (Language.FINNISH, "Finnish"),
+        (Language.FRENCH, "French"),
+        (Language.HEBREW, "Hebrew"),
+        (Language.HINDI, "Hindi"),
+        (Language.CROATIAN, "Croatian"),
+        (Language.HUNGARIAN, "Hungarian"),
+        (Language.INDONESIAN, "Indonesian"),
+        (Language.ITALIAN, "Italian"),
+        (Language.JAPANESE, "Japanese"),
+        (Language.GEORGIAN, "Georgian"),
+        (Language.KAZAKH, "Kazakh"),
+        (Language.KOREAN, "Korean"),
+        (Language.LITHUANIAN, "Lithuanian"),
+        (Language.MACEDONIAN, "North Macedonian"),
+        (Language.MALAY, "Malay"),
+        (Language.NEPALI, "Nepali"),
+        (Language.DUTCH, "Dutch"),
+        (Language.POLISH, "Polish"),
+        (Language.PORTUGUESE, "Portuguese"),
+        (Language.RUSSIAN, "Russian"),
+        (Language.ALBANIAN, "Albanian"),
+        (Language.SERBIAN, "Serbian"),
+        (Language.TAMIL, "Tamil"),
+        (Language.TELUGU, "Telugu"),
+        (Language.TAGALOG, "Tagalog"),
+        (Language.TURKISH, "Turkish"),
+        (Language.UKRAINIAN, "Ukrainian"),
+        (Language.URDU, "Urdu"),
+        (Language.UZBEK, "Uzbek"),
+        (Language.VIETNAMESE, "Vietnamese"),
+        (Language.CHINESE, "Chinese"),
+    ]
+    for formulation in [
+        MCFFormulation(),
+        CFFormulation(),
+        HybridFormulation(),
+    ]
+]
+
+TASKS_TABLE.extend(
+    [
+        *include_tasks,
+    ]
+)
 
 # -------------------------------- MMLU -------------------------------- #
 # MMLU (Massive Multitask Language Understanding)
